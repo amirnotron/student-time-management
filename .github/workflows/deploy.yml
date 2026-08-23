@@ -5,33 +5,95 @@ on:
     branches:
       - master
 
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+env:
+  APP_NAME: student-time-management
+  NODE_VERSION: '20'
+  KEEP_RELEASES: 3
+
 jobs:
   deploy:
     runs-on: self-hosted
+    timeout-minutes: 20
 
     steps:
-      - name: Stop PM2 process before update
-        shell: cmd
-        continue-on-error: true
-        run: pm2 stop student-time-management
-
-      - name: Get latest code
+      - name: Checkout code into isolated release folder
         uses: actions/checkout@v4
+        with:
+          path: releases/${{ github.sha }}
 
-      - name: Setup Node.js & Enable Cache
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+          cache-dependency-path: releases/${{ github.sha }}/package-lock.json
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install dependencies (with retry)
+        shell: cmd
+        working-directory: releases/${{ github.sha }}
+        run: |
+          set RETRY_COUNT=0
+          :RETRY
+          set /a RETRY_COUNT+=1
+          echo Install attempt %RETRY_COUNT% of 3...
+          call npm ci --no-audit --no-fund
+          if %errorlevel%==0 goto INSTALL_OK
+          if %RETRY_COUNT% geq 3 goto INSTALL_FAILED
+          echo Install failed, waiting 5 seconds before retry...
+          timeout /t 5 /nobreak >nul
+          goto RETRY
 
-      - name: Build Next.js Project
+          :INSTALL_FAILED
+          echo Dependency install failed after 3 attempts.
+          exit /b 1
+
+          :INSTALL_OK
+          echo Dependencies installed successfully.
+
+      - name: Build Next.js project
+        shell: cmd
+        working-directory: releases/${{ github.sha }}
         run: npm run build
 
-      - name: Run or Restart PM2 Safely
+      - name: Verify build output
+        shell: cmd
+        working-directory: releases/${{ github.sha }}
+        run: |
+          if not exist ".next\BUILD_ID" (
+            echo Build verification failed: .next\BUILD_ID was not found.
+            exit /b 1
+          )
+          echo Build verified successfully.
+
+      - name: Remove previous PM2 process (if exists)
+        shell: cmd
+        continue-on-error: true
+        run: pm2 delete "%APP_NAME%"
+
+      - name: Start new release with PM2
         shell: cmd
         run: |
-          pm2 restart student-time-management || pm2 start node_modules/next/dist/bin/next --name "student-time-management" -- start -H 0.0.0.0 -p 3000
+          pm2 start "${{ github.workspace }}\releases\${{ github.sha }}\node_modules\next\dist\bin\next" --name "%APP_NAME%" --cwd "${{ github.workspace }}\releases\${{ github.sha }}" -- start -H 0.0.0.0 -p 3000
+          if %errorlevel% neq 0 exit /b %errorlevel%
           pm2 save
+
+      - name: Confirm deployment is running
+        shell: cmd
+        run: pm2 describe "%APP_NAME%"
+
+      - name: Clean up old releases
+        shell: powershell
+        run: |
+          $releasesPath = "releases"
+          if (Test-Path $releasesPath) {
+            $releases = Get-ChildItem -Path $releasesPath -Directory | Sort-Object LastWriteTime -Descending
+            $toDelete = $releases | Select-Object -Skip ([int]$env:KEEP_RELEASES)
+            foreach ($dir in $toDelete) {
+              Write-Host "Removing old release: $($dir.FullName)"
+              Remove-Item -Recurse -Force $dir.FullName -ErrorAction SilentlyContinue
+            }
+          }
