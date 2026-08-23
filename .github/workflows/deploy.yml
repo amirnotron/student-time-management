@@ -28,5 +28,5 @@ jobs:
       - name: Run or Restart PM2 Safely
         shell: cmd
         run: |
-          pm2 restart student-time-management || pm2 start npm --name "student-time-management" -- run start
+          pm2 restart student-time-management || pm2 start node_modules/next/dist/bin/next --name "student-time-management" -- start
           pm2 save
