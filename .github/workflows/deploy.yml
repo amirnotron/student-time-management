@@ -1,0 +1,32 @@
+name: Deploy Next.js App
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Get latest code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js & Enable Cache
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Next.js Project
+        run: npm run build
+
+      - name: Run or Restart PM2 Safely
+        shell: cmd
+        run: |
+          pm2 restart student-time-management || pm2 start npm --name "student-time-management" -- run start
+          pm2 save
