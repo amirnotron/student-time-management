@@ -5,6 +5,8 @@ on:
     branches:
       - master
 
+# جلوگیری از اجرای هم‌زمان چند دیپلوی روی هم؛ اگه دو پوش پشت سر هم بیاد،
+# دومی صف می‌شه و منتظر می‌مونه تا اولی تموم بشه (از تداخل روی PM2 جلوگیری می‌کنه)
 concurrency:
   group: production-deploy
   cancel-in-progress: false
@@ -20,6 +22,9 @@ jobs:
     timeout-minutes: 20
 
     steps:
+      # هر دیپلوی توی یک پوشه‌ی کاملاً جدید (بر اساس commit SHA) چک‌اوت می‌شه.
+      # این یعنی هیچ‌وقت با فایل‌های قفل‌شده‌ی پروسه‌ی در حال اجرای PM2 برخورد نمی‌کنیم
+      # (ریشه‌ی خطای EPERM قبلی همین بود).
       - name: Checkout code into isolated release folder
         uses: actions/checkout@v4
         with:
@@ -32,6 +37,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: releases/${{ github.sha }}/package-lock.json
 
+      # npm ci بجای npm install: نصب تمیز و قطعی دقیقاً مطابق package-lock.json
+      # + retry خودکار در صورت قطعی موقت شبکه/رجیستری npm (شایع‌ترین علت خطاهای بی‌ربط CI)
       - name: Install dependencies (with retry)
         shell: cmd
         working-directory: releases/${{ github.sha }}
@@ -59,6 +66,8 @@ jobs:
         working-directory: releases/${{ github.sha }}
         run: npm run build
 
+      # قبل از اینکه کاری به نسخه‌ی لایو داشته باشیم، مطمئن می‌شیم build واقعاً
+      # کامل و سالم تولید شده. اگه این فایل نباشه یعنی build ناقص بوده.
       - name: Verify build output
         shell: cmd
         working-directory: releases/${{ github.sha }}
@@ -68,6 +77,11 @@ jobs:
             exit /b 1
           )
           echo Build verified successfully.
+
+      # ==========================================================
+      # از این خط به بعد یعنی build کاملاً موفق و verify شده.
+      # فقط از همین لحظه به بعد PM2 و نسخه‌ی لایو رو لمس می‌کنیم.
+      # ==========================================================
 
       - name: Remove previous PM2 process (if exists)
         shell: cmd
@@ -85,6 +99,10 @@ jobs:
         shell: cmd
         run: pm2 describe "%APP_NAME%"
 
+      # نگه‌داشتن چند نسخه‌ی آخر برای rollback دستی در صورت نیاز،
+      # و پاک کردن نسخه‌های قدیمی‌تر برای جلوگیری از پر شدن دیسک.
+      # این مرحله فقط بعد از دیپلوی *موفق* اجرا می‌شه، پس هیچ‌وقت نسخه‌ی
+      # در حال اجرای فعلی رو پاک نمی‌کنه.
       - name: Clean up old releases
         shell: powershell
         run: |
