@@ -10,6 +10,10 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Stop PM2 App to release file locks
+        shell: cmd
+        run: pm2 stop student-time-management || true
+
       - name: Get latest code
         uses: actions/checkout@v3
 
@@ -28,5 +32,5 @@ jobs:
       - name: Run or Restart PM2 Safely
         shell: cmd
         run: |
-          pm2 restart student-time-management || pm2 start node_modules/next/dist/bin/next --name "student-time-management" -- start
+          pm2 restart student-time-management || pm2 start node_modules/next/dist/bin/next --name "student-time-management" -- start -H 0.0.0.0 -p 3000
           pm2 save
