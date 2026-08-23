@@ -9,10 +9,10 @@ jobs:
   deploy:
     runs-on: self-hosted
 
-    steps:
-      - name: Stop PM2 App to release file locks
-        shell: cmd
-        run: pm2 stop student-time-management || true
+    # steps:
+    #   - name: Stop PM2 App to release file locks
+    #     shell: cmd
+    #     run: pm2 stop student-time-management || true
 
       - name: Get latest code
         uses: actions/checkout@v3
