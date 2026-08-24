@@ -48,6 +48,7 @@ jobs:
 
       # npm ci بجای npm install: نصب تمیز و قطعی دقیقاً مطابق package-lock.json
       # + retry خودکار در صورت قطعی موقت شبکه/رجیستری npm
+# استفاده از npm install به جای npm ci برای جلوگیری از ارور سینک نبودن فایل‌های قفل
       - name: Install dependencies (with retry)
         shell: cmd
         working-directory: releases/${{ steps.vars.outputs.short_sha }}
@@ -56,7 +57,7 @@ jobs:
           :RETRY
           set /a RETRY_COUNT+=1
           echo Install attempt %RETRY_COUNT% of 3...
-          call npm ci --no-audit --no-fund
+          call npm install --no-audit --no-fund
           if %errorlevel%==0 goto INSTALL_OK
           if %RETRY_COUNT% geq 3 goto INSTALL_FAILED
           echo Install failed, waiting 5 seconds before retry...
