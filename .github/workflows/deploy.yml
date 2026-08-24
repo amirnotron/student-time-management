@@ -5,8 +5,6 @@ on:
     branches:
       - master
 
-# جلوگیری از اجرای هم‌زمان چند دیپلوی روی هم؛ اگه دو پوش پشت سر هم بیاد،
-# دومی صف می‌شه و منتظر می‌مونه تا اولی تموم بشه (از تداخل روی PM2 جلوگیری می‌کنه)
 concurrency:
   group: production-deploy
   cancel-in-progress: false
@@ -22,18 +20,12 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      # یه شناسه‌ی کوتاه (۸ کاراکتری) از کامیت می‌سازیم تا مسیر پوشه‌ها روی
-      # ویندوز خیلی طولانی نشه (ویندوز محدودیت ۲۶۰ کاراکتری MAX_PATH داره
-      # و node_modules پروژه‌های Next.js معمولاً خیلی عمیق و بلندن)
       - name: Compute short commit SHA
         id: vars
         shell: cmd
         run: |
           set SHORT_SHA=%GITHUB_SHA:~0,8%
           echo short_sha=%SHORT_SHA%>>"%GITHUB_OUTPUT%"
-
-      # هر دیپلوی توی یک پوشه‌ی کاملاً جدید چک‌اوت می‌شه.
-      # این یعنی هیچ‌وقت با فایل‌های قفل‌شده‌ی پروسه‌ی در حال اجرای PM2 برخورد نمی‌کنیم.
       - name: Checkout code into isolated release folder
         uses: actions/checkout@v4
         with:
@@ -46,9 +38,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: releases/${{ steps.vars.outputs.short_sha }}/package-lock.json
 
-      # npm ci بجای npm install: نصب تمیز و قطعی دقیقاً مطابق package-lock.json
-      # + retry خودکار در صورت قطعی موقت شبکه/رجیستری npm
-# استفاده از npm install به جای npm ci برای جلوگیری از ارور سینک نبودن فایل‌های قفل
       - name: Install dependencies (with retry)
         shell: cmd
         working-directory: releases/${{ steps.vars.outputs.short_sha }}
@@ -76,8 +65,6 @@ jobs:
         working-directory: releases/${{ steps.vars.outputs.short_sha }}
         run: npm run build
 
-      # قبل از اینکه کاری به نسخه‌ی لایو داشته باشیم، مطمئن می‌شیم build واقعاً
-      # کامل و سالم تولید شده. اگه این فایل نباشه یعنی build ناقص بوده.
       - name: Verify build output
         shell: cmd
         working-directory: releases/${{ steps.vars.outputs.short_sha }}
@@ -87,11 +74,6 @@ jobs:
             exit /b 1
           )
           echo Build verified successfully.
-
-      # ==========================================================
-      # از این خط به بعد یعنی build کاملاً موفق و verify شده.
-      # فقط از همین لحظه به بعد PM2 و نسخه‌ی لایو رو لمس می‌کنیم.
-      # ==========================================================
 
       - name: Remove previous PM2 process (if exists)
         shell: cmd
@@ -109,10 +91,6 @@ jobs:
         shell: cmd
         run: pm2 describe "%APP_NAME%"
 
-      # نگه‌داشتن چند نسخه‌ی آخر برای rollback دستی در صورت نیاز،
-      # و پاک کردن نسخه‌های قدیمی‌تر برای جلوگیری از پر شدن دیسک.
-      # این مرحله فقط بعد از دیپلوی *موفق* اجرا می‌شه، پس هیچ‌وقت نسخه‌ی
-      # در حال اجرای فعلی رو پاک نمی‌کنه.
       - name: Clean up old releases
         shell: powershell
         run: |
