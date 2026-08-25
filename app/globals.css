@@ -9,6 +9,24 @@
 body {
   font-family: "iranYekan";
 }
+
+.main-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background-image: url("../public/texture.png");
+  background-size: 30%;
+  background-repeat: repeat;
+
+  opacity: 0.02 ; /* میزان شفافیت تکسچر */
+  pointer-events: none;
+  z-index: 0;
+}
+
+.main-container > * {
+  z-index: 1;
+}
 ::view-transition-group(.morph) {
   animation-duration: 250ms;
 }

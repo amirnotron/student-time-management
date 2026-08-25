@@ -121,7 +121,7 @@ export default function ModernCalendar() {
   for (let i = 1; i <= remaining; i++) { cells.push({ dayNumber: i, isCurrentMonth: false, isToday: false, tasks: [] }); }
 
   return (
-    <div className="flex flex-col gap-4 p-4 h-full">
+    <div className="flex flex-col gap-4 h-full">
       <header className="h-20 flex items-center justify-between px-4 bg-white shrink-0 rounded-xl">
         <div className="flex items-center gap-6">
           <button onClick={goToToday} className="bg-[#4F39F6] text-white rounded-full px-4 py-3 text-xs font-bold transition-colors">باز کردن امروز</button>

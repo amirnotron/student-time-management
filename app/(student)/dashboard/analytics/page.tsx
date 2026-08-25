@@ -68,7 +68,7 @@ export default function StudentDashboardPage() {
   ];
 
   return (
-    <div dir="rtl" className="w-full h-full custom-scrollbar p-6">
+    <div dir="rtl" className="w-full h-full">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
         <div className="flex items-center gap-4">
           <div>

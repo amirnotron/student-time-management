@@ -8,6 +8,7 @@ import {
   GraduationCap,
   Flame,
   LogOut,
+  Terminal,
   X,
 } from "lucide-react";
 
@@ -20,9 +21,24 @@ const navItems = [
   { name: "شروع", href: "/dashboard/start", icon: LayoutDashboard },
   { name: "پیشخوان", href: "/dashboard/analytics", icon: LayoutDashboard },
   { name: "تقویم", href: "/dashboard/calendar", icon: BookOpen },
-  { name: "وظایف روزانه", href: "/dashboard/daily-routine", icon: GraduationCap, count: "جدید" },
+  {
+    name: "وظایف روزانه",
+    href: "/dashboard/daily-routine",
+    icon: GraduationCap,
+    count: "جدید",
+  },
   { name: "برنامه درسی", href: "/dashboard/study-plan", icon: GraduationCap },
-  { name: "ارتباط با مشاور", href: "/dashboard/chat", icon: GraduationCap, count: "4" },
+  {
+    name: "ارتباط با مشاور",
+    href: "/dashboard/chat",
+    icon: GraduationCap,
+    count: "4",
+  },
+    {
+    name: "توسعه دهندگان",
+    href: "/dashboard/information",
+    icon: Terminal,
+  },
 ];
 
 const streakDays = [
@@ -35,22 +51,27 @@ const streakDays = [
   { label: "ج", status: "pending" },
 ];
 
-export default function SidebarFloatingModel({ isOpen, onClose }: SidebarProps) {
+export default function SidebarFloatingModel({
+  isOpen,
+  onClose,
+}: SidebarProps) {
   const pathname = usePathname();
 
   return (
     <aside
       dir="rtl"
-      className={`fixed md:sticky top-20 right-0 z-[99] h-[calc(100vh-5rem)] w-72 p-3 transition-transform duration-300 ${
-        isOpen ? "translate-x-0" : "translate-x-full"
+      className={`fixed md:sticky top-0 right-0 z-[99] m-6.5 w-72 transition-transform duration-300 ${
+        isOpen ? "translate-x-0" : "translate-x-78.5"
       } md:translate-x-0`}
     >
-      <div className="flex h-full flex-col justify-between rounded-lg border border-gray-100 bg-white p-4">
+      <div className="flex h-full flex-col flex-1 justify-between rounded-xl bg-white p-6.5">
         <div className="space-y-6">
           <div className="flex items-center justify-between px-2">
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-[#4F39F6]" />
-              <span className="text-xs font-black text-zinc-800">پنل مطالعه</span>
+              <span className="text-xs font-black text-zinc-800">
+                پنل مطالعه
+              </span>
             </div>
             <button
               onClick={onClose}
@@ -88,8 +109,8 @@ export default function SidebarFloatingModel({ isOpen, onClose }: SidebarProps) 
                         isActive
                           ? "bg-[#4F39F6]/20 text-[#4F39F6]"
                           : item.count === "جدید"
-                          ? "bg-orange-100 text-orange-600"
-                          : "bg-zinc-100 text-zinc-600"
+                            ? "bg-orange-100 text-orange-600"
+                            : "bg-zinc-100 text-zinc-600"
                       }`}
                     >
                       {item.count}
@@ -106,7 +127,9 @@ export default function SidebarFloatingModel({ isOpen, onClose }: SidebarProps) 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Flame className="h-5 w-5 text-orange-500 fill-orange-500" />
-                <span className="text-xs font-black text-orange-950">۱۲ روز استریک</span>
+                <span className="text-xs font-black text-orange-950">
+                  ۱۲ روز استریک
+                </span>
               </div>
               <span className="text-[10px] font-extrabold text-orange-600 bg-white px-2 py-0.5 rounded-full border border-orange-200">
                 عالی!
@@ -121,8 +144,8 @@ export default function SidebarFloatingModel({ isOpen, onClose }: SidebarProps) 
                     day.status === "completed"
                       ? "bg-orange-500 text-white"
                       : day.status === "active"
-                      ? "bg-orange-200 text-orange-800 ring-2 ring-orange-400"
-                      : "bg-white text-zinc-400 border border-zinc-200/60"
+                        ? "bg-orange-200 text-orange-800 ring-2 ring-orange-400"
+                        : "bg-white text-zinc-400 border border-zinc-200/60"
                   }`}
                 >
                   {day.label}
