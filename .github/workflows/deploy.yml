@@ -38,27 +38,27 @@ jobs:
           cache: 'npm'
           cache-dependency-path: releases/${{ steps.vars.outputs.short_sha }}/package-lock.json
 
-      # - name: Install dependencies (with retry)
-      #   shell: cmd
-      #   working-directory: releases/${{ steps.vars.outputs.short_sha }}
-      #   run: |
-      #     set RETRY_COUNT=0
-      #     :RETRY
-      #     set /a RETRY_COUNT+=1
-      #     echo Install attempt %RETRY_COUNT% of 3...
-      #     call npm install --no-audit --no-fund
-      #     if %errorlevel%==0 goto INSTALL_OK
-      #     if %RETRY_COUNT% geq 3 goto INSTALL_FAILED
-      #     echo Install failed, waiting 5 seconds before retry...
-      #     ping -n 6 127.0.0.1 >nul
-      #     goto RETRY
+      - name: Install dependencies (with retry)
+        shell: cmd
+        working-directory: releases/${{ steps.vars.outputs.short_sha }}
+        run: |
+          set RETRY_COUNT=0
+          :RETRY
+          set /a RETRY_COUNT+=1
+          echo Install attempt %RETRY_COUNT% of 3...
+          call npm install --no-audit --no-fund
+          if %errorlevel%==0 goto INSTALL_OK
+          if %RETRY_COUNT% geq 3 goto INSTALL_FAILED
+          echo Install failed, waiting 5 seconds before retry...
+          ping -n 6 127.0.0.1 >nul
+          goto RETRY
 
-      #     :INSTALL_FAILED
-      #     echo Dependency install failed after 3 attempts.
-      #     exit /b 1
+          :INSTALL_FAILED
+          echo Dependency install failed after 3 attempts.
+          exit /b 1
 
-      #     :INSTALL_OK
-      #     echo Dependencies installed successfully.
+          :INSTALL_OK
+          echo Dependencies installed successfully.
 
       - name: Build Next.js project
         shell: cmd
